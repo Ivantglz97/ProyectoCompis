@@ -87,3 +87,89 @@ public class ASDR implements Parser{
         }
         return stmts;
     }
+        //FUN_DECL -> fun FUNCTION
+    private Statement FUN_DECL() {
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case FUN:
+                match(TipoToken.FUN);
+                return FUNCTION();
+            default:
+                hayErrores = true;
+                return null;
+        }
+    }
+
+    //VAR_DECL -> var id VAR_INIT ;
+    private Statement VAR_DECL() {
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case VAR:
+                match(TipoToken.VAR);
+                match(TipoToken.IDENTIFIER);
+                Token name = previous();
+                Expression init = VAR_INIT();
+                match(TipoToken.SEMICOLON);
+                return new StmtVar(name,init);
+            default:
+                hayErrores = true;
+                return null;
+        }
+    }
+
+       //VAR_INIT -> = EXPRESSION || EMPTY
+    private Expression VAR_INIT() {
+
+        if(hayErrores)
+            return null;
+
+        if(preanalisis.getTipo() == TipoToken.EQUAL){
+            match(TipoToken.EQUAL);
+            return EXPRESSION();
+        }
+
+        return null;
+
+    }
+
+        /*Sentencias*/
+    //STATEMENT -> EXPR_STMT || FOR_STMT || IF_STMT || PRINT_STMT || RETURN_STMT || WHILE_STMT || BLOCK
+    private Statement STATEMENT() {
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case BANG:
+            case MINUS:
+            case FALSE:
+            case TRUE:
+            case NULL:
+            case NUMBER:
+            case STRING:
+            case IDENTIFIER:
+            case LEFT_PAREN:
+                return EXPR_STMT();
+            case FOR:
+                return FOR_STMT();
+            case IF:
+                return IF_STMT();
+            case PRINT:
+                return PRINT_STMT();
+            case RETURN:
+                return RETURN_STMT();
+            case WHILE:
+                return WHILE_STMT();
+            case LEFT_BRACE:
+                return BLOCK();
+            default:
+                hayErrores = true;
+                return null;
+        }
+    }
