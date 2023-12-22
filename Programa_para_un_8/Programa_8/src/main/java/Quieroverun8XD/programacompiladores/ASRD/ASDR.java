@@ -230,3 +230,59 @@ public class ASDR implements Parser{
                 return null;
         }
     }
+
+        //FOR_STMT_1 -> VAR_DECL || EXPR_STMT || ;
+    private Statement FOR_STMT_1() {
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case VAR:
+                return VAR_DECL();
+            case BANG:
+            case MINUS:
+            case FALSE:
+            case TRUE:
+            case NULL:
+            case NUMBER:
+            case STRING:
+            case IDENTIFIER:
+            case LEFT_PAREN:
+                return EXPR_STMT();
+            case SEMICOLON:
+                match(TipoToken.SEMICOLON);
+                return null;
+            default:
+                hayErrores = true;
+                return null;
+        }
+    }
+
+    //FOR_STMT_2 -> EXPRESSION; || ;
+    private Expression FOR_STMT_2() {
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case BANG:
+            case MINUS:
+            case FALSE:
+            case TRUE:
+            case NULL:
+            case NUMBER:
+            case STRING:
+            case IDENTIFIER:
+            case LEFT_PAREN:
+                Expression expr = EXPRESSION();
+                match(TipoToken.SEMICOLON);
+                return expr;
+            case SEMICOLON:
+                match(TipoToken.SEMICOLON);
+                return null;
+            default:
+                hayErrores = true;
+                return null;
+        }
+    }
