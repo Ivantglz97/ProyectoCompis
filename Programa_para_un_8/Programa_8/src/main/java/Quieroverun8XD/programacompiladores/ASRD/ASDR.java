@@ -173,3 +173,60 @@ public class ASDR implements Parser{
                 return null;
         }
     }
+        //EXPR_STMT -> EXPRESSION ;
+    private Statement EXPR_STMT() {
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case BANG:
+            case MINUS:
+            case FALSE:
+            case TRUE:
+            case NULL:
+            case NUMBER:
+            case STRING:
+            case IDENTIFIER:
+            case LEFT_PAREN:
+                Expression expr = EXPRESSION();
+                match(TipoToken.SEMICOLON);
+                return new StmtExpression(expr);
+            default:
+                hayErrores = true;
+                return null;
+        }
+    }
+        //FOR_STMT -> for ( FOR_STMT_1 FOR_STMT_2 FOR_STMT_3 ) STATEMENT
+    private Statement FOR_STMT() {
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case FOR:
+                match(TipoToken.FOR);
+                match(TipoToken.LEFT_PAREN);
+                Statement init = FOR_STMT_1();
+                Expression con = FOR_STMT_2();
+                Expression inc = FOR_STMT_3();
+                match(TipoToken.RIGHT_PAREN);
+                Statement body = STATEMENT();
+
+                if(inc != null)
+                    body = new StmtBlock(Arrays.asList(body,new StmtExpression(inc)));
+
+                if(con == null)
+                    con = new ExprLiteral(true);
+
+                body = new StmtLoop(con,body);
+
+                if(init != null)
+                    body = new StmtBlock(Arrays.asList(init,body));
+
+                return body;
+            default:
+                hayErrores = true;
+                return null;
+        }
+    }
