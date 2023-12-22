@@ -884,3 +884,131 @@ public class ASDR implements Parser{
                 return null;
         }
     }
+        //FUNCTION -> id ( PARAMETERS_OPC ) BLOCK
+    private Statement FUNCTION() {
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case IDENTIFIER:
+                match(TipoToken.IDENTIFIER);
+                Token name = previous(); //Esto estaba al revés
+                match(TipoToken.LEFT_PAREN);
+                List<Token> params = PARAMETERS_OPC();
+                match(TipoToken.RIGHT_PAREN);
+                StmtBlock body = (StmtBlock) BLOCK();
+                return new StmtFunction(name,params,body);
+            default:
+                hayErrores = true;
+                return null;
+        }
+    }
+
+    //FUNCTIONS -> FUN_DECL FUNCTIONS || EMPTY
+    private void FUNCTIONS() {
+
+        if(hayErrores)
+            return;
+
+        if(preanalisis.getTipo() == TipoToken.FUN){
+            FUN_DECL();
+            FUNCTIONS();
+        }
+
+    }
+
+    //PARAMETERS_OPC -> PARAMETERS || EMPTY
+    private List<Token> PARAMETERS_OPC() {
+
+        if(hayErrores)
+            return null;
+
+        if(preanalisis.getTipo() == TipoToken.IDENTIFIER){
+            return PARAMETERS();
+        }
+
+        return null;
+    }
+
+    //PARAMETERS -> id PARAMETERS_2
+    private List<Token> PARAMETERS() {
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case IDENTIFIER:
+                match(TipoToken.IDENTIFIER);
+                List<Token> lstparam = new ArrayList<>();
+                lstparam.add(previous());
+                PARAMETERS_2(lstparam);
+                return lstparam;
+            default:
+                hayErrores = true;
+                return null;
+        }
+    }
+
+    //PARAMETERS_2 -> , id PARAMETERS_2 || EMPTY
+    private void PARAMETERS_2(List<Token> lstparam) {
+
+        if(hayErrores)
+            return;
+
+        if(preanalisis.getTipo() == TipoToken.COMMA){
+            match(TipoToken.COMMA);
+            match(TipoToken.IDENTIFIER);
+            lstparam.add(previous());
+            PARAMETERS_2(lstparam);
+        }
+
+    }
+
+    //ARGUMENTS_OPC -> EXPRESSION ARGUMENTS || EMPTY
+    private List<Expression> ARGUMENTS_OPC() {
+
+        if(hayErrores)
+            return null;
+
+        if(preanalisis.getTipo() == TipoToken.BANG || preanalisis.getTipo() == TipoToken.MINUS || preanalisis.getTipo() == TipoToken.FALSE || preanalisis.getTipo() == TipoToken.TRUE|| preanalisis.getTipo() == TipoToken.NULL
+                || preanalisis.getTipo() == TipoToken.NUMBER || preanalisis.getTipo() == TipoToken.STRING || preanalisis.getTipo() == TipoToken.IDENTIFIER || preanalisis.getTipo() == TipoToken.LEFT_PAREN) {
+            List<Expression> lstargs = new ArrayList<>();
+            Expression expr = EXPRESSION();
+            lstargs.add(expr);
+            ARGUMENTS(lstargs);
+            return lstargs;
+        }
+
+        return null;
+
+    }
+
+    //ARGUMENTS -> , EXPRESSION ARGUMENTS || EMPTY
+    private void ARGUMENTS(List<Expression> lstArgs) {
+
+        if(hayErrores)
+            return;
+
+        if(preanalisis.getTipo() == TipoToken.COMMA){
+            match(TipoToken.COMMA);
+            Expression expr = EXPRESSION();
+            lstArgs.add(expr);
+            ARGUMENTS(lstArgs);
+        }
+
+    }
+
+    private void match(TipoToken tt){
+        if(preanalisis.getTipo() == tt){
+            i++;
+            preanalisis = tokens.get(i);
+        }else
+            hayErrores = true;
+    }
+
+    private Token previous(){
+        return this.tokens.get(i-1);
+    }
+
+}
