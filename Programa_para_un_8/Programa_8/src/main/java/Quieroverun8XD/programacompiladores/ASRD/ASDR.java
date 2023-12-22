@@ -20,3 +20,19 @@ public class ASDR implements Parser{
         preanalisis = tokens.get(i);
 
     }
+       //Gramatica
+    @Override
+    public boolean parse() {
+
+        List<Statement> arbol = PROGRAM();
+
+        if(preanalisis.getTipo() == TipoToken.EOF && !hayErrores){
+            System.out.println("Funciona");
+            return  true;
+        }
+        else
+            System.out.println("No funciona");
+
+        return false;
+
+    }
