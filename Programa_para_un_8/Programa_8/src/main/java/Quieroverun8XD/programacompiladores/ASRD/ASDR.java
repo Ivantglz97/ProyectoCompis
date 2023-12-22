@@ -286,3 +286,15 @@ public class ASDR implements Parser{
                 return null;
         }
     }
+       //FOR_STMT_3 -> EXPRESSION || EMPTY
+    private Expression FOR_STMT_3() {
+
+        if(hayErrores)
+            return null;
+        if(preanalisis.getTipo() == TipoToken.BANG || preanalisis.getTipo() == TipoToken.MINUS || preanalisis.getTipo() == TipoToken.FALSE || preanalisis.getTipo() == TipoToken.TRUE|| preanalisis.getTipo() == TipoToken.NULL
+                || preanalisis.getTipo() == TipoToken.NUMBER || preanalisis.getTipo() == TipoToken.STRING || preanalisis.getTipo() == TipoToken.IDENTIFIER || preanalisis.getTipo() == TipoToken.LEFT_PAREN)
+            return EXPRESSION();
+
+
+        return null;
+    }
