@@ -617,3 +617,270 @@ public class ASDR implements Parser{
         return expr;
 
     }
+    //COMPARISON -> TERM COMPARISON_2
+    private Expression COMPARISON() {
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case BANG:
+            case MINUS:
+            case FALSE:
+            case TRUE:
+            case NULL:
+            case NUMBER:
+            case STRING:
+            case IDENTIFIER:
+            case LEFT_PAREN:
+                return COMPARISON_2(TERM());
+            default:
+                hayErrores = true;
+                return null;
+        }
+    }
+
+    //COMPARISON_2 -> > TERM COMPARISON_2 || >= TERM COMPARISON_2 || < TERM COMPARISON_2 || <= TERM COMPARISON_2 || EMPTY
+    private Expression COMPARISON_2(Expression expr) {
+
+        Token operator;
+        Expression expr2;
+        ExprBinary exprBinary;
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case GREATER:
+                match(TipoToken.GREATER);
+                operator = previous();
+                expr2 = TERM();
+                exprBinary = new ExprBinary(expr,operator,expr2);
+                return COMPARISON_2(exprBinary);
+            case GREATER_EQUAL:
+                match(TipoToken.GREATER_EQUAL);
+                operator = previous();
+                expr2 = TERM();
+                exprBinary = new ExprBinary(expr,operator,expr2);
+                return COMPARISON_2(exprBinary);
+            case LESS:
+                match(TipoToken.LESS);
+                operator = previous();
+                expr2 = TERM();
+                exprBinary = new ExprBinary(expr,operator,expr2);
+                return COMPARISON_2(exprBinary);
+            case LESS_EQUAL:
+                match(TipoToken.LESS_EQUAL);
+                operator = previous();
+                expr2 = TERM();
+                exprBinary = new ExprBinary(expr,operator,expr2);
+                return COMPARISON_2(exprBinary);
+        }
+        return expr;
+    }
+
+    //TERM -> FACTOR TERM_2
+    private Expression TERM() {
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case BANG:
+            case MINUS:
+            case FALSE:
+            case TRUE:
+            case NULL:
+            case NUMBER:
+            case STRING:
+            case IDENTIFIER:
+            case LEFT_PAREN:
+                return TERM_2(FACTOR());
+            default:
+                hayErrores = true;
+                return null;
+        }
+    }
+
+    //TERM_2 -> - FACTOR TERM_2 || + FACTOR TERM_2 || EMPTY
+    private Expression TERM_2(Expression expr) {
+
+        Token operator;
+        Expression expr2;
+        ExprBinary exprBinary;
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case MINUS:
+                match(TipoToken.MINUS);
+                operator = previous();
+                expr2 = FACTOR();
+                exprBinary = new ExprBinary(expr,operator,expr2);
+                return TERM_2(exprBinary);
+            case PLUS:
+                match(TipoToken.PLUS);
+                operator = previous();
+                expr2 = FACTOR();
+                exprBinary = new ExprBinary(expr,operator,expr2);
+                return TERM_2(exprBinary);
+        }
+        return expr;
+    }
+
+    //FACTOR -> UNARY FACTOR_2
+    private Expression FACTOR() {
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case BANG:
+            case MINUS:
+            case FALSE:
+            case TRUE:
+            case NULL:
+            case NUMBER:
+            case STRING:
+            case IDENTIFIER:
+            case LEFT_PAREN:
+                return FACTOR_2(UNARY());
+            default:
+                hayErrores = true;
+                return null;
+        }
+    }
+
+    //FACTOR_2 -> / UNARY FACTOR_2 || * UNARY FACTOR_2 || EMPTY
+    private Expression FACTOR_2(Expression expr) {
+
+        Token operator;
+        Expression expr2;
+        ExprBinary exprBinary;
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case SLASH:
+                match(TipoToken.SLASH);
+                operator = previous();
+                expr2 = UNARY();
+                exprBinary = new ExprBinary(expr,operator,expr2);
+                return FACTOR_2(exprBinary);
+            case STAR:
+                match(TipoToken.STAR);
+                operator = previous();
+                expr2 = UNARY();
+                exprBinary = new ExprBinary(expr,operator,expr2);
+                return FACTOR_2(exprBinary);
+        }
+        return expr;
+
+    }
+
+    //UNARY -> ! UNARY || - UNARY || CALL
+    private Expression UNARY() {
+
+        Token operator;
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case BANG:
+                match(TipoToken.BANG);
+                operator = previous();
+                return new ExprUnary(operator,UNARY());
+            case MINUS:
+                match(TipoToken.MINUS);
+                operator = previous();
+                return new ExprUnary(operator,UNARY());
+            case FALSE:
+            case TRUE:
+            case NULL:
+            case NUMBER:
+            case STRING:
+            case IDENTIFIER:
+            case LEFT_PAREN:
+                return CALL();
+            default:
+                hayErrores = true;
+                return null;
+        }
+    }
+
+    //CALL -> PRIMARY CALL_2
+    private Expression CALL() {
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case FALSE:
+            case TRUE:
+            case NULL:
+            case NUMBER:
+            case STRING:
+            case IDENTIFIER:
+            case LEFT_PAREN:
+                return CALL_2(PRIMARY());
+            default:
+                hayErrores = true;
+                return null;
+        }
+    }
+
+    //CALL_2 -> ( ARGUMENTS_OPC ) CALL_2 || EMPTY
+    private Expression CALL_2(Expression expr) {
+
+        if(hayErrores)
+            return null;
+
+        if(preanalisis.getTipo() == TipoToken.LEFT_PAREN){
+            match(TipoToken.LEFT_PAREN);
+            List<Expression> args = ARGUMENTS_OPC();
+            match(TipoToken.RIGHT_PAREN);
+            return CALL_2(new ExprCallFunction(expr, args));
+        }
+
+        return expr;
+
+    }
+
+    //PRIMARY -> true || false || null || number || string || id || ( EXPRESSION )
+    private Expression PRIMARY() {
+
+        if(hayErrores)
+            return null;
+
+        switch (preanalisis.getTipo()){
+            case FALSE:
+                match(TipoToken.FALSE);
+                return new ExprLiteral(false);
+            case TRUE:
+                match(TipoToken.TRUE);
+                return new ExprLiteral(true);
+            case NULL:
+                match(TipoToken.NULL);
+                return new ExprLiteral(null);
+            case NUMBER:
+                match(TipoToken.NUMBER);
+                return new ExprLiteral(previous().getLiteral());
+            case STRING:
+                match(TipoToken.STRING);
+                return new ExprLiteral(previous().getLiteral());
+            case IDENTIFIER:
+                match(TipoToken.IDENTIFIER);
+                return new ExprVariable(previous());
+            case LEFT_PAREN:
+                match(TipoToken.LEFT_PAREN);
+                Expression expr = EXPRESSION();
+                match(TipoToken.RIGHT_PAREN);
+                return new ExprGrouping(expr);
+            default:
+                hayErrores = true;
+                return null;
+        }
+    }
